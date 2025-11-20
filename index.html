@@ -1019,42 +1019,260 @@
         // API Configuration
         const API_URL = 'https://tradenet-quantum-terminal.onrender.com/api/dashboard';
 
+        // Global data storage
+        let dashboardData = null;
+        let agentCount = 0;
+
         // Initialize Terminal
         document.addEventListener('DOMContentLoaded', function() {
             initializeTerminal();
-            startDataFeeds();
             updateClock();
         });
 
         function initializeTerminal() {
-            // Hide loading screen after initialization
-            setTimeout(() => {
-                document.getElementById('loadingOverlay').style.display = 'none';
-            }, 2000);
+            // Fetch initial data
+            fetchDashboardData().then(() => {
+                // Hide loading screen after data loads
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }, 1500);
+            });
 
-            // Generate initial order book
-            generateOrderBook();
-
-            // Generate initial footprint chart
-            generateFootprintChart();
-
-            // Start trade tape simulation
-            simulateTradeTape();
-
-            // Fetch dashboard data
-            fetchDashboardData();
+            // Start data refresh
+            startDataFeeds();
         }
 
-        // Generate Order Book
-        function generateOrderBook() {
+        // Fetch Dashboard Data
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+
+                console.log('API Response:', data);
+
+                if (data.status === 'initializing') {
+                    document.getElementById('aiContent').innerHTML =
+                        '⏳ Quantum agents warming up... First analysis coming soon!';
+                    return;
+                }
+
+                if (data.status === 'success' && data.overall_analysis) {
+                    dashboardData = data;
+                    updateDashboard(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch dashboard data:', error);
+                document.getElementById('aiContent').innerHTML =
+                    `<span style="color: var(--infrared-red)">❌ Connection error. Retrying...</span>`;
+            }
+        }
+
+        // Update Dashboard with API Data
+        function updateDashboard(data) {
+            const overall = data.overall_analysis;
+            const timeframes = data.timeframe_analysis;
+            const agents = data.agent_signals;
+            const regime = data.orderflow_regime;
+            const trade = data.trade_recommendation;
+            const risk = data.risk_assessment;
+            const factors = data.key_factors;
+
+            // Update agent count in header
+            agentCount = agents ? agents.length : 0;
+            updateAgentCount(agentCount);
+
+            // Update bias indicator
+            updateBiasIndicator(overall);
+
+            // Update session stats with real timeframe data
+            updateSessionStats(timeframes, overall);
+
+            // Update risk metrics
+            updateRiskMetrics(risk, overall);
+
+            // Update AI panel with executive summary and trade rec
+            updateAIPanel(overall, regime, trade);
+
+            // Generate order book based on bias
+            generateOrderBook(overall.bias, overall.confidence);
+
+            // Generate footprint chart with agent signals
+            generateFootprintChart(agents);
+
+            // Update trade tape with factors
+            updateTradeTape(factors);
+
+            // Update last update time
+            if (data.last_updated_formatted) {
+                document.getElementById('currentTime').textContent =
+                    `Last Update: ${data.last_updated_formatted}`;
+            }
+
+            // Create alert for high conviction signals
+            if (overall.confidence > 85 && overall.conviction !== 'low') {
+                showAlert(`⚡ HIGH CONVICTION ${overall.bias.toUpperCase()} SIGNAL - ${overall.confidence}% Confidence`);
+            }
+        }
+
+        function updateAgentCount(count) {
+            const agentIndicator = document.querySelector('.status-indicators');
+            const agentStatus = agentIndicator.querySelector('.status-item:nth-child(3) span:last-child');
+            if (agentStatus) {
+                agentStatus.textContent = `${count} AGENTS`;
+            }
+        }
+
+        function updateBiasIndicator(overall) {
+            const biasValue = document.getElementById('biasValue');
+            biasValue.textContent = overall.bias.toUpperCase();
+            biasValue.className = `bias-value bias-${overall.bias.toLowerCase()}`;
+
+            const biasLabel = document.querySelector('.bias-label');
+            biasLabel.innerHTML = `CONVICTION: ${overall.confidence}%<br><small>${overall.conviction.toUpperCase()}</small>`;
+        }
+
+        function updateSessionStats(timeframes, overall) {
+            const statsGrid = document.getElementById('sessionStats');
+
+            // Calculate aggregate metrics from timeframes
+            const shortConf = timeframes.short_term.confidence;
+            const medConf = timeframes.medium_term.confidence;
+            const longConf = timeframes.long_term.confidence;
+
+            const avgStrength = (
+                timeframes.short_term.strength +
+                timeframes.medium_term.strength +
+                timeframes.long_term.strength
+            ) / 3;
+
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Short Term</div>
+                    <div class="stat-value ${timeframes.short_term.bias === 'bullish' ? 'bias-bullish' : timeframes.short_term.bias === 'bearish' ? 'bias-bearish' : 'bias-neutral'}">
+                        ${timeframes.short_term.bias.toUpperCase()}
+                    </div>
+                    <div class="stat-change">${shortConf.toFixed(1)}% conf</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Medium Term</div>
+                    <div class="stat-value ${timeframes.medium_term.bias === 'bullish' ? 'bias-bullish' : timeframes.medium_term.bias === 'bearish' ? 'bias-bearish' : 'bias-neutral'}">
+                        ${timeframes.medium_term.bias.toUpperCase()}
+                    </div>
+                    <div class="stat-change">${medConf.toFixed(1)}% conf</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Long Term</div>
+                    <div class="stat-value ${timeframes.long_term.bias === 'bullish' ? 'bias-bullish' : timeframes.long_term.bias === 'bearish' ? 'bias-bearish' : 'bias-neutral'}">
+                        ${timeframes.long_term.bias.toUpperCase()}
+                    </div>
+                    <div class="stat-change">${longConf.toFixed(1)}% conf</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg Strength</div>
+                    <div class="stat-value">${avgStrength.toFixed(1)}%</div>
+                    <div class="stat-change ${avgStrength > 50 ? 'stat-up' : 'stat-down'}">
+                        ${avgStrength > 50 ? '↑ Strong' : '↓ Weak'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateRiskMetrics(risk, overall) {
+            const riskPanel = document.getElementById('riskMetrics');
+
+            const mainRisk = risk.main_risks && risk.main_risks.length > 0
+                ? risk.main_risks[0]
+                : 'Market conditions normal';
+
+            riskPanel.innerHTML = `
+                <div class="risk-item">
+                    <div class="risk-label">Market Confidence</div>
+                    <div class="risk-value">${overall.confidence}%</div>
+                </div>
+                <div class="risk-bar">
+                    <div class="risk-fill" style="width: ${overall.confidence}%"></div>
+                </div>
+
+                <div class="risk-item">
+                    <div class="risk-label">Conviction Level</div>
+                    <div class="risk-value">${overall.conviction.toUpperCase()}</div>
+                </div>
+                <div class="risk-bar">
+                    <div class="risk-fill" style="width: ${
+                        overall.conviction === 'high' ? 90 :
+                        overall.conviction === 'medium' ? 60 : 30
+                    }%"></div>
+                </div>
+
+                <div class="risk-item">
+                    <div class="risk-label">Primary Risk</div>
+                    <div class="risk-value" style="font-size: 10px; color: var(--high-voltage)">
+                        ${mainRisk.substring(0, 50)}...
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px; padding: 8px; background: rgba(255, 204, 0, 0.1); border-radius: 4px; border: 1px solid rgba(255, 204, 0, 0.3);">
+                    <div style="font-size: 10px; color: var(--high-voltage); margin-bottom: 4px;">
+                        ⚠️ Bull Invalidation:
+                    </div>
+                    <div style="font-size: 9px; opacity: 0.8;">
+                        ${risk.bull_case_invalidation}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAIPanel(overall, regime, trade) {
+            const aiContent = document.getElementById('aiContent');
+
+            aiContent.innerHTML = `
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: var(--electric-blue)">📊 Executive Analysis:</strong><br>
+                    <span style="font-size: 12px; line-height: 1.5;">${overall.executive_summary}</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0;">
+                    <div style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 4px;">
+                        <div style="font-size: 10px; color: var(--text-dim); margin-bottom: 4px;">ORDERFLOW REGIME</div>
+                        <div style="font-size: 14px; font-weight: 600; color: var(--electric-blue)">
+                            ${regime.type.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                        <div style="font-size: 11px; opacity: 0.8;">Strength: ${regime.strength}%</div>
+                    </div>
+
+                    <div style="background: rgba(139, 92, 246, 0.1); padding: 8px; border-radius: 4px;">
+                        <div style="font-size: 10px; color: var(--text-dim); margin-bottom: 4px;">TRADE REC</div>
+                        <div style="font-size: 14px; font-weight: 600; color: var(--neural-purple)">
+                            ${trade.primary_bias.toUpperCase()}
+                        </div>
+                        <div style="font-size: 11px; opacity: 0.8;">TF: ${trade.suggested_timeframe}</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 4px; margin-top: 8px;">
+                    <div style="font-size: 11px; color: var(--muted-teal); margin-bottom: 4px;">
+                        💡 Position Sizing: ${trade.position_sizing} | Confluence: ${trade.confluence_score}%
+                    </div>
+                    <div style="font-size: 11px; opacity: 0.7;">
+                        ${trade.notes}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateOrderBook(bias, confidence) {
             const orderBook = document.getElementById('orderBook');
             let html = '';
 
+            // Adjust order book based on bias
+            const biasFactor = bias === 'bullish' ? 1.3 : bias === 'bearish' ? 0.7 : 1.0;
+
             // Generate asks (sell orders)
             for (let i = 10; i > 0; i--) {
-                const price = 68420 + (i * 10);
-                const size = Math.floor(Math.random() * 100) + 10;
+                const size = Math.floor((Math.random() * 100 + 10) / biasFactor);
                 const barWidth = Math.min(size / 2, 100);
+                const price = 68420 + (i * 10);
+
                 html += `
                     <div class="order-level ask">
                         <div class="order-price" style="color: var(--sell-color)">${price.toFixed(1)}</div>
@@ -1064,18 +1282,23 @@
                 `;
             }
 
-            // Current price
+            // Current price with bias indicator
             html += `
-                <div style="text-align: center; padding: 8px; background: rgba(0, 212, 255, 0.1); font-weight: 700; color: var(--electric-blue);">
-                    68,420.0
+                <div style="text-align: center; padding: 8px; background: linear-gradient(90deg,
+                    ${bias === 'bullish' ? 'rgba(0, 255, 136, 0.2)' :
+                      bias === 'bearish' ? 'rgba(255, 51, 102, 0.2)' :
+                      'rgba(0, 212, 255, 0.1)'});
+                    font-weight: 700; color: var(--electric-blue);">
+                    68,420.0 <span style="font-size: 10px;">${bias.toUpperCase()}</span>
                 </div>
             `;
 
             // Generate bids (buy orders)
-            for (let i = 1; i <= 10; i++) {
-                const price = 68420 - (i * 10);
-                const size = Math.floor(Math.random() * 100) + 10;
+            for (let i = 1; i <= 10; i--) {
+                const size = Math.floor((Math.random() * 100 + 10) * biasFactor);
                 const barWidth = Math.min(size / 2, 100);
+                const price = 68420 - (i * 10);
+
                 html += `
                     <div class="order-level bid">
                         <div class="order-price" style="color: var(--buy-color)">${price.toFixed(1)}</div>
@@ -1088,23 +1311,49 @@
             orderBook.innerHTML = html;
         }
 
-        // Generate Footprint Chart
-        function generateFootprintChart() {
+        function generateFootprintChart(agents) {
             const footprintChart = document.getElementById('footprintChart');
+
+            if (!agents || agents.length === 0) {
+                footprintChart.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.5;">Waiting for agent signals...</div>';
+                return;
+            }
+
             let html = '<div class="footprint-grid">';
 
-            for (let i = 0; i < 20; i++) {
-                const bid = Math.floor(Math.random() * 500) + 100;
-                const ask = Math.floor(Math.random() * 500) + 100;
-                const delta = bid - ask;
-                const bgOpacity = Math.abs(delta) / 100;
-                const bgColor = delta > 0 ? 'rgba(0, 255, 136, ' : 'rgba(255, 51, 102, ';
+            // Create footprint cells based on agent signals
+            agents.forEach(agent => {
+                const bid = Math.floor(agent.strength * 5 + Math.random() * 100);
+                const ask = Math.floor((100 - agent.strength) * 5 + Math.random() * 100);
+                const delta = agent.bias === 'bullish' ? bid - ask : ask - bid;
+                const bgOpacity = agent.confidence / 100;
+                const bgColor = agent.bias === 'bullish' ? 'rgba(0, 255, 136, ' :
+                               agent.bias === 'bearish' ? 'rgba(255, 51, 102, ' :
+                               'rgba(99, 110, 136, ';
+
+                const agentName = agent.agent_id.replace(/_/g, ' ').substring(0, 10);
 
                 html += `
-                    <div class="footprint-cell" style="background: ${bgColor}${bgOpacity * 0.2})">
+                    <div class="footprint-cell" style="background: ${bgColor}${bgOpacity * 0.3})"
+                         title="${agent.agent_id}: ${agent.bias} (${agent.confidence}% confidence)">
+                        <div style="font-size: 8px; opacity: 0.6; margin-bottom: 4px;">${agentName}</div>
                         <div class="footprint-bid">${bid}</div>
                         <div class="footprint-ask">${ask}</div>
-                        <div class="footprint-delta ${delta > 0 ? 'bias-bullish' : 'bias-bearish'}">${delta > 0 ? '+' : ''}${delta}</div>
+                        <div class="footprint-delta ${agent.bias === 'bullish' ? 'bias-bullish' : agent.bias === 'bearish' ? 'bias-bearish' : 'bias-neutral'}">
+                            ${delta > 0 ? '+' : ''}${delta}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Fill remaining cells if fewer agents
+            const remainingCells = Math.max(0, 20 - agents.length);
+            for (let i = 0; i < remainingCells; i++) {
+                html += `
+                    <div class="footprint-cell" style="opacity: 0.3;">
+                        <div class="footprint-bid">--</div>
+                        <div class="footprint-ask">--</div>
+                        <div class="footprint-delta">0</div>
                     </div>
                 `;
             }
@@ -1113,15 +1362,21 @@
             footprintChart.innerHTML = html;
         }
 
-        // Simulate Trade Tape
-        function simulateTradeTape() {
+        function updateTradeTape(factors) {
             const tape = document.getElementById('tradeTape');
 
-            setInterval(() => {
-                const isBuy = Math.random() > 0.5;
-                const price = (68420 + (Math.random() * 20 - 10)).toFixed(1);
-                const size = (Math.random() * 50 + 0.1).toFixed(2);
-                const time = new Date().toLocaleTimeString('en-US', {
+            if (!factors || factors.length === 0) {
+                return;
+            }
+
+            // Clear existing and add factor-based trades
+            tape.innerHTML = '';
+
+            factors.slice(0, 10).forEach((factor, index) => {
+                const isBullish = factor.impact === 'bullish';
+                const time = new Date();
+                time.setSeconds(time.getSeconds() - index * 5);
+                const timeStr = time.toLocaleTimeString('en-US', {
                     hour12: false,
                     hour: '2-digit',
                     minute: '2-digit',
@@ -1129,65 +1384,22 @@
                 });
 
                 const trade = document.createElement('div');
-                trade.className = `trade-item ${isBuy ? 'buy' : 'sell'}`;
+                trade.className = `trade-item ${isBullish ? 'buy' : 'sell'}`;
                 trade.innerHTML = `
-                    <div class="trade-time">${time}</div>
-                    <div class="trade-price" style="color: var(--${isBuy ? 'buy' : 'sell'}-color)">${price}</div>
-                    <div class="trade-size">${size}</div>
+                    <div class="trade-time">${timeStr}</div>
+                    <div class="trade-price" style="color: var(--${isBullish ? 'buy' : 'sell'}-color)">
+                        ${factor.weight}
+                    </div>
+                    <div class="trade-size" style="font-size: 9px; opacity: 0.7;" title="${factor.factor}">
+                        ${factor.timeframe}
+                    </div>
                 `;
 
-                tape.insertBefore(trade, tape.firstChild);
-
-                // Keep only last 10 trades
-                while (tape.children.length > 10) {
-                    tape.removeChild(tape.lastChild);
-                }
-            }, Math.random() * 2000 + 1000);
+                tape.appendChild(trade);
+            });
         }
 
-        // Fetch Dashboard Data
-        async function fetchDashboardData() {
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-
-                if (data.status === 'success' && data.overall_analysis) {
-                    updateDashboard(data);
-                }
-            } catch (error) {
-                console.error('Failed to fetch dashboard data:', error);
-            }
-        }
-
-        // Update Dashboard with API Data
-        function updateDashboard(data) {
-            const overall = data.overall_analysis;
-
-            // Update bias indicator
-            const biasValue = document.getElementById('biasValue');
-            biasValue.textContent = overall.bias.toUpperCase();
-            biasValue.className = `bias-value bias-${overall.bias.toLowerCase()}`;
-
-            // Update conviction
-            const biasLabel = document.querySelector('.bias-label');
-            biasLabel.textContent = `CONVICTION: ${overall.confidence}%`;
-
-            // Update AI response with analysis
-            const aiContent = document.getElementById('aiContent');
-            aiContent.innerHTML = `
-                <strong>Market Analysis:</strong><br>
-                ${overall.executive_summary}<br><br>
-                <strong>Orderflow Regime:</strong> ${data.orderflow_regime.type.replace(/_/g, ' ')}<br>
-                <strong>Strength:</strong> ${data.orderflow_regime.strength}%
-            `;
-
-            // Create alert if high conviction
-            if (overall.confidence > 80) {
-                showAlert(`HIGH CONVICTION ${overall.bias.toUpperCase()} SIGNAL DETECTED`);
-            }
-        }
-
-        // AI Query Handler
+        // AI Query Handler - now with real data context
         function sendAIQuery() {
             const input = document.getElementById('aiInput');
             const query = input.value.trim();
@@ -1202,11 +1414,24 @@
                 <span class="ai-thinking" style="animation-delay: 0.4s;"></span>
             `;
 
-            // Simulate AI response
+            // Simulate AI response with actual data context
             setTimeout(() => {
-                aiContent.innerHTML = `Query analyzed. Based on current orderflow patterns and agent consensus,
-                the market shows ${Math.random() > 0.5 ? 'bullish' : 'bearish'} tendencies with
-                ${Math.floor(Math.random() * 30 + 60)}% confidence.`;
+                if (dashboardData) {
+                    const overall = dashboardData.overall_analysis;
+                    const trade = dashboardData.trade_recommendation;
+
+                    aiContent.innerHTML = `
+                        <strong>Query Analysis:</strong> "${query}"<br><br>
+                        Based on current data:<br>
+                        • Market Bias: ${overall.bias.toUpperCase()} (${overall.confidence}% confidence)<br>
+                        • Recommended Action: ${trade.primary_bias}<br>
+                        • Timeframe: ${trade.suggested_timeframe}<br>
+                        • Risk Level: ${overall.conviction}<br><br>
+                        ${overall.executive_summary}
+                    `;
+                } else {
+                    aiContent.innerHTML = `Analyzing... Please wait for initial data load.`;
+                }
             }, 2000);
 
             input.value = '';
@@ -1214,10 +1439,15 @@
 
         // Show Alert Notification
         function showAlert(message) {
+            const existingAlert = document.querySelector('.alert-notification');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
             const alert = document.createElement('div');
             alert.className = 'alert-notification';
             alert.innerHTML = `
-                <div class="alert-icon">⚠️</div>
+                <div class="alert-icon">⚡</div>
                 <div>${message}</div>
             `;
 
@@ -1247,12 +1477,6 @@
         function startDataFeeds() {
             // Refresh dashboard data every 30 seconds
             setInterval(fetchDashboardData, 30000);
-
-            // Update order book every 5 seconds
-            setInterval(generateOrderBook, 5000);
-
-            // Update footprint chart every 10 seconds
-            setInterval(generateFootprintChart, 10000);
         }
 
         // Keyboard shortcuts
@@ -1264,6 +1488,12 @@
                     aiInput.focus();
                     e.preventDefault();
                 }
+            }
+
+            // Press 'R' to refresh data
+            if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
+                fetchDashboardData();
+                showAlert('📊 Refreshing dashboard data...');
             }
 
             // Press Escape to clear focus
