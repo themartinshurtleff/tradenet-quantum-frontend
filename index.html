@@ -49,9 +49,8 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
-            overflow: hidden;
             position: relative;
-            height: 100vh;
+            min-height: 100vh;
         }
 
         /* Neural Grid Background */
@@ -70,11 +69,34 @@
             z-index: 0;
         }
 
-        /* Main Container */
-        .terminal-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+        /* Scanline Effect */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0) 50%,
+                rgba(0, 212, 255, 0.01) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 1000;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
             position: relative;
             z-index: 1;
         }
@@ -82,38 +104,40 @@
         /* Header Bar */
         .header-bar {
             background: linear-gradient(90deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
-            padding: 8px 20px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             backdrop-filter: blur(10px);
+            margin-bottom: 30px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
         }
 
         .logo-icon {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             background: var(--gradient-neural);
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 18px;
+            font-size: 20px;
             text-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
         }
 
         .logo-text {
             font-family: 'IBM Plex Mono', monospace;
-            font-size: 18px;
+            font-size: 24px;
             font-weight: 600;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             background: linear-gradient(90deg, var(--electric-blue), var(--muted-teal));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -123,7 +147,7 @@
         .status-indicators {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 30px;
         }
 
         .status-item {
@@ -149,526 +173,574 @@
             50% { opacity: 0.6; transform: scale(0.9); }
         }
 
-        /* Main Layout Grid */
-        .main-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 300px 1fr 350px;
-            grid-template-rows: 1fr;
-            gap: 1px;
-            background: rgba(0, 212, 255, 0.1);
-            padding: 1px;
-            overflow: hidden;
-        }
-
-        /* Panel Base Styles */
-        .panel {
-            background: var(--bg-panel);
-            border: 1px solid rgba(0, 212, 255, 0.1);
+        /* Main Bias Display */
+        .main-bias {
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            margin-bottom: 30px;
             position: relative;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
-        .panel-header {
-            background: linear-gradient(180deg, rgba(0, 212, 255, 0.05) 0%, transparent 100%);
-            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel-title {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--electric-blue);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .panel-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 16px;
-        }
-
-        /* Left Sidebar - Order Book & Trade Tape */
-        .left-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        /* Order Book Heatmap */
-        .order-book {
-            flex: 1;
-        }
-
-        .order-book-content {
-            padding: 0;
-        }
-
-        .order-level {
-            display: grid;
-            grid-template-columns: 80px 1fr 80px;
-            padding: 2px 8px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            position: relative;
-            transition: all 0.1s ease;
-        }
-
-        .order-level:hover {
-            background: rgba(0, 212, 255, 0.1);
-            transform: translateX(2px);
-        }
-
-        .order-level.ask {
-            background: linear-gradient(90deg, transparent 0%, rgba(255, 51, 102, 0.1) 100%);
-        }
-
-        .order-level.bid {
-            background: linear-gradient(90deg, transparent 0%, rgba(0, 255, 136, 0.1) 100%);
-        }
-
-        .order-price {
-            font-weight: 600;
-        }
-
-        .order-size {
-            text-align: right;
-            opacity: 0.8;
-        }
-
-        .order-bar {
-            height: 100%;
+        .main-bias::before {
+            content: '';
             position: absolute;
-            top: 0;
-            right: 0;
-            opacity: 0.3;
-            z-index: -1;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.05) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
         }
 
-        .order-bar.ask { background: var(--sell-color); }
-        .order-bar.bid { background: var(--buy-color); }
-
-        /* Trade Tape */
-        .trade-tape {
-            height: 250px;
-        }
-
-        .trade-item {
-            display: grid;
-            grid-template-columns: 60px 80px 80px;
-            gap: 8px;
-            padding: 6px 8px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            border-bottom: 1px solid rgba(0, 212, 255, 0.05);
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .trade-item.buy { border-left: 2px solid var(--buy-color); }
-        .trade-item.sell { border-left: 2px solid var(--sell-color); }
-
-        .trade-time { color: var(--text-dim); }
-        .trade-price { font-weight: 600; }
-        .trade-size { text-align: right; opacity: 0.8; }
-
-        /* Center Content Area */
-        .center-content {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        /* Main Chart Area */
-        .chart-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chart-controls {
-            display: flex;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.3);
-            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
-        }
-
-        .timeframe-btn {
-            padding: 6px 12px;
-            background: transparent;
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            color: var(--text-secondary);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .timeframe-btn:hover {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: var(--electric-blue);
-            color: var(--electric-blue);
-        }
-
-        .timeframe-btn.active {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: var(--electric-blue);
-            color: var(--electric-blue);
-        }
-
-        /* Footprint Chart */
-        .footprint-display {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.02) 0%, transparent 70%);
-        }
-
-        .footprint-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-            gap: 2px;
-            width: 100%;
-            max-width: 800px;
-            padding: 20px;
-        }
-
-        .footprint-cell {
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 9px;
-            border: 1px solid rgba(0, 212, 255, 0.1);
-            position: relative;
-            transition: all 0.2s ease;
-        }
-
-        .footprint-cell:hover {
-            transform: scale(1.1);
-            border-color: var(--electric-blue);
-            z-index: 10;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
-        }
-
-        .footprint-bid {
-            color: var(--buy-color);
-            font-weight: 600;
-        }
-
-        .footprint-ask {
-            color: var(--sell-color);
-            font-weight: 600;
-        }
-
-        .footprint-delta {
-            font-size: 8px;
-            opacity: 0.7;
-            margin-top: 2px;
-        }
-
-        /* AI Agent Panel */
-        .ai-panel {
-            height: 280px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(0, 212, 255, 0.05) 100%);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-        }
-
-        .ai-interface {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .neural-visualization {
-            height: 80px;
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(180deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%);
-        }
-
-        .neural-line {
-            position: absolute;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--neural-purple), transparent);
-            animation: neural-flow 3s linear infinite;
-        }
-
-        @keyframes neural-flow {
-            from { transform: translateX(-100%); }
-            to { transform: translateX(100%); }
-        }
-
-        .ai-response {
-            flex: 1;
-            padding: 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            line-height: 1.6;
-            color: var(--text-secondary);
-        }
-
-        .ai-thinking {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--neural-purple);
-            animation: thinking 1s infinite;
-            margin: 0 2px;
-        }
-
-        @keyframes thinking {
-            0%, 60%, 100% { opacity: 0.3; }
-            30% { opacity: 1; }
-        }
-
-        .ai-input {
-            display: flex;
-            gap: 8px;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border-top: 1px solid rgba(139, 92, 246, 0.2);
-        }
-
-        .ai-input input {
-            flex: 1;
-            background: transparent;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            padding: 8px 12px;
-            color: var(--text-primary);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12px;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        .ai-input input:focus {
-            border-color: var(--neural-purple);
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
-        }
-
-        .ai-submit {
-            padding: 8px 16px;
-            background: var(--gradient-neural);
-            border: none;
-            color: white;
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .ai-submit:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
-        }
-
-        /* Right Sidebar - Analytics */
-        .right-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        /* Market Bias Display */
-        .market-bias {
-            height: 200px;
-        }
-
-        .bias-indicator {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            padding: 20px;
-        }
-
-        .bias-meter {
-            width: 150px;
-            height: 150px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .bias-circle {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 0deg,
-                var(--sell-color) 0deg,
-                var(--neutral-color) 120deg,
-                var(--buy-color) 240deg,
-                var(--sell-color) 360deg
-            );
-            position: relative;
-            animation: rotate-slow 20s linear infinite;
-        }
-
-        @keyframes rotate-slow {
+        @keyframes rotate {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
 
-        .bias-inner {
-            position: absolute;
-            width: 80%;
-            height: 80%;
-            background: var(--bg-panel);
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .bias-value {
-            font-size: 32px;
-            font-weight: 700;
-            font-family: 'IBM Plex Mono', monospace;
+        .main-bias-content {
+            position: relative;
+            z-index: 1;
         }
 
         .bias-label {
-            font-size: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             opacity: 0.6;
+            margin-bottom: 15px;
         }
 
-        .bias-bullish { color: var(--buy-color); }
-        .bias-bearish { color: var(--sell-color); }
-        .bias-neutral { color: var(--neutral-color); }
-
-        /* Session Stats */
-        .session-stats {
-            flex: 1;
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .stat-card {
-            background: rgba(0, 212, 255, 0.05);
-            border: 1px solid rgba(0, 212, 255, 0.1);
-            padding: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .stat-card:hover {
-            background: rgba(0, 212, 255, 0.08);
-            border-color: rgba(0, 212, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .stat-label {
-            font-size: 10px;
+        .bias-value {
+            font-size: 5.5em;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-dim);
-            margin-bottom: 6px;
+            margin-bottom: 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 8px;
         }
 
-        .stat-value {
-            font-size: 20px;
+        .bias-bullish {
+            color: var(--buy-color);
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.8), 0 0 60px rgba(0, 255, 136, 0.4);
+        }
+        .bias-bearish {
+            color: var(--sell-color);
+            text-shadow: 0 0 30px rgba(255, 51, 102, 0.8), 0 0 60px rgba(255, 51, 102, 0.4);
+        }
+        .bias-neutral {
+            color: var(--high-voltage);
+            text-shadow: 0 0 30px rgba(255, 204, 0, 0.8), 0 0 60px rgba(255, 204, 0, 0.4);
+        }
+
+        .conviction-bar {
+            width: 100%;
+            max-width: 600px;
+            height: 35px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 25px auto;
+        }
+
+        .conviction-fill {
+            height: 100%;
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 700;
             font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            letter-spacing: 1px;
         }
 
-        .stat-change {
-            font-size: 11px;
-            margin-top: 4px;
+        .conviction-fill.bias-bullish {
+            background: var(--gradient-buy);
+        }
+        .conviction-fill.bias-bearish {
+            background: var(--gradient-sell);
+        }
+        .conviction-fill.bias-neutral {
+            background: linear-gradient(135deg, var(--high-voltage) 0%, var(--neutral-color) 100%);
+        }
+
+        .conviction-text {
+            margin-top: 20px;
+            font-size: 1.4em;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 2px;
+        }
+
+        .executive-summary {
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 4px solid var(--electric-blue);
+            text-align: left;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-panel);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+            padding: 25px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-neural);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.2);
+            border-color: var(--electric-blue);
+        }
+
+        .card-header {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--electric-blue);
+        }
+
+        /* Regime Display */
+        .regime-display {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .regime-type {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
             font-family: 'IBM Plex Mono', monospace;
         }
 
-        .stat-up { color: var(--buy-color); }
-        .stat-down { color: var(--sell-color); }
-
-        /* Risk Metrics */
-        .risk-panel {
-            height: 250px;
+        .regime-strength {
+            font-size: 1.5em;
+            margin: 10px 0;
+            color: var(--high-voltage);
         }
 
-        .risk-item {
+        .regime-description {
+            font-size: 1.1em;
+            opacity: 0.8;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        /* Trade Recommendation */
+        .trade-display {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .trade-bias {
+            font-size: 2.5em;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .trade-details {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 212, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .trade-detail-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid rgba(0, 212, 255, 0.05);
         }
 
-        .risk-label {
-            font-size: 12px;
-            color: var(--text-secondary);
+        .trade-detail-row:last-child {
+            border-bottom: none;
         }
 
-        .risk-value {
+        .trade-notes {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        /* Timeframe Analysis */
+        .timeframe-card {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .timeframe-card:hover {
+            transform: scale(1.02);
+            border-color: var(--electric-blue);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .timeframe-label {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             font-family: 'IBM Plex Mono', monospace;
-            font-size: 12px;
-            font-weight: 600;
         }
 
-        .risk-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(0, 212, 255, 0.1);
-            border-radius: 2px;
+        .timeframe-bias {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .timeframe-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 212, 255, 0.05);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .timeframe-reasoning {
+            margin-top: 20px;
+            font-size: 0.9em;
+            text-align: left;
+            opacity: 0.8;
+            line-height: 1.6;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+
+        /* Agent Signals */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .agent-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(0, 212, 255, 0.05) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
             overflow: hidden;
-            margin-top: 4px;
         }
 
-        .risk-fill {
+        .agent-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, var(--buy-color), var(--high-voltage), var(--sell-color));
-            transition: width 0.5s ease;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .agent-card:hover::after {
+            left: 100%;
+        }
+
+        .agent-card:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.3);
+            border-color: var(--neural-purple);
+        }
+
+        .agent-name {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--electric-blue);
+        }
+
+        .agent-bias-large {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin: 15px 0;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .agent-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .agent-stat {
+            text-align: center;
+        }
+
+        .agent-stat-label {
+            font-size: 0.7em;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .agent-stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 5px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        /* Key Factors */
+        .factor-list {
+            list-style: none;
+        }
+
+        .factor-item {
+            padding: 20px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid var(--electric-blue);
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .factor-item:hover {
+            transform: translateX(5px);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .factor-item.bullish {
+            border-left-color: var(--buy-color);
+            background: rgba(0, 255, 136, 0.05);
+        }
+        .factor-item.bearish {
+            border-left-color: var(--sell-color);
+            background: rgba(255, 51, 102, 0.05);
+        }
+        .factor-item.neutral {
+            border-left-color: var(--high-voltage);
+            background: rgba(255, 204, 0, 0.05);
+        }
+
+        .factor-text {
+            margin-bottom: 10px;
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        .factor-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            opacity: 0.7;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .factor-meta span {
+            padding: 4px 8px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Risk Assessment */
+        .risk-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 204, 0, 0.2);
+        }
+
+        .risk-title {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: var(--high-voltage);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .risk-content {
+            padding: 15px;
+            background: rgba(255, 204, 0, 0.05);
+            border-radius: 6px;
+            border-left: 3px solid var(--high-voltage);
+            line-height: 1.6;
+        }
+
+        .risk-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .risk-list li {
+            padding: 10px 0;
+            padding-left: 25px;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 204, 0, 0.1);
+        }
+
+        .risk-list li:last-child {
+            border-bottom: none;
+        }
+
+        .risk-list li::before {
+            content: '⚠';
+            position: absolute;
+            left: 0;
+            color: var(--high-voltage);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 40px;
+            border-top: 2px solid rgba(0, 212, 255, 0.2);
+            font-family: 'IBM Plex Mono', monospace;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.02) 100%);
+        }
+
+        .last-update {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: var(--electric-blue);
+            letter-spacing: 1px;
+        }
+
+        .footer-credit {
+            opacity: 0.5;
+            font-size: 0.9em;
+            letter-spacing: 2px;
+        }
+
+        /* Loading Overlay */
+        .loading {
+            text-align: center;
+            font-size: 2.5em;
+            padding: 100px;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 3px;
+            color: var(--electric-blue);
+            animation: pulse-slow 2s infinite;
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Error State */
+        .error {
+            color: var(--infrared-red);
+            text-align: center;
+            padding: 50px;
+            border: 2px solid var(--infrared-red);
+            border-radius: 12px;
+            background: rgba(255, 51, 102, 0.1);
+            font-size: 1.2em;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 1px;
         }
 
         /* Alert Notification */
         .alert-notification {
             position: fixed;
-            top: 60px;
+            top: 80px;
             right: 20px;
-            background: linear-gradient(135deg, rgba(255, 51, 102, 0.9) 0%, rgba(255, 107, 107, 0.9) 100%);
-            border: 1px solid var(--infrared-red);
-            padding: 12px 20px;
-            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(255, 204, 0, 0.95) 0%, rgba(255, 153, 0, 0.95) 100%);
+            border: 1px solid var(--high-voltage);
+            padding: 15px 25px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             gap: 12px;
             animation: slideInRight 0.3s ease;
             z-index: 1000;
             backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(255, 204, 0, 0.3);
         }
 
         @keyframes slideInRight {
@@ -682,47 +754,10 @@
             }
         }
 
-        .alert-icon {
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: alert-pulse 1s infinite;
-        }
-
-        @keyframes alert-pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-
-        /* Holographic Effect for AI */
-        .hologram {
-            position: relative;
-        }
-
-        .hologram::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: var(--gradient-neural);
-            opacity: 0.3;
-            filter: blur(10px);
-            animation: hologram-glow 2s ease-in-out infinite;
-        }
-
-        @keyframes hologram-glow {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.6; }
-        }
-
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
         }
 
         ::-webkit-scrollbar-track {
@@ -731,87 +766,54 @@
 
         ::-webkit-scrollbar-thumb {
             background: rgba(0, 212, 255, 0.3);
-            border-radius: 3px;
+            border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(0, 212, 255, 0.5);
         }
 
-        /* Loading State */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-        .loading-text {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            color: var(--electric-blue);
-            margin-top: 20px;
-        }
-
-        .loading-bar {
-            width: 200px;
-            height: 2px;
-            background: rgba(0, 212, 255, 0.1);
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .loading-progress {
-            height: 100%;
-            background: var(--gradient-neural);
-            animation: loading 2s ease-in-out infinite;
-        }
-
-        @keyframes loading {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(300%); }
-        }
-
         /* Responsive */
-        @media (max-width: 1400px) {
-            .main-grid {
-                grid-template-columns: 250px 1fr 300px;
+        @media (max-width: 1200px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .bias-value {
+                font-size: 4em;
+            }
+
+            .agent-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             }
         }
 
-        @media (max-width: 1200px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr auto;
+        @media (max-width: 768px) {
+            .header-bar {
+                flex-direction: column;
+                gap: 20px;
             }
 
-            .left-sidebar, .right-sidebar {
-                grid-column: 1;
+            .status-indicators {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .bias-value {
+                font-size: 3em;
+            }
+
+            .agent-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-text">Initializing Quantum Systems</div>
-        <div class="loading-bar">
-            <div class="loading-progress"></div>
-        </div>
-    </div>
+    <div class="scanline"></div>
 
-    <!-- Main Terminal -->
-    <div class="terminal-container">
-        <!-- Header Bar -->
+    <div class="container">
+        <!-- Header -->
         <div class="header-bar">
             <div class="logo">
                 <div class="logo-icon">Q</div>
@@ -825,225 +827,32 @@
                 </div>
                 <div class="status-item">
                     <span class="status-dot" style="background: var(--neural-purple)"></span>
-                    <span>AI ACTIVE</span>
+                    <span id="agentCount">AGENTS: --</span>
                 </div>
                 <div class="status-item">
                     <span class="status-dot" style="background: var(--high-voltage)"></span>
-                    <span>12 AGENTS</span>
-                </div>
-                <div class="status-item" style="color: var(--text-dim)">
-                    <span id="currentTime">00:00:00</span>
+                    <span>QUANTUM AI</span>
                 </div>
             </div>
         </div>
 
-        <!-- Main Grid Layout -->
-        <div class="main-grid">
-            <!-- Left Sidebar -->
-            <div class="left-sidebar">
-                <!-- Order Book Heatmap -->
-                <div class="panel order-book">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <span>📊</span>
-                            <span>ORDER BOOK L2</span>
-                        </div>
-                    </div>
-                    <div class="panel-content order-book-content" id="orderBook">
-                        <!-- Order levels will be populated here -->
-                    </div>
-                </div>
+        <!-- Dashboard Content -->
+        <div id="dashboard">
+            <div class="loading">⚡ INITIALIZING QUANTUM SYSTEMS...</div>
+        </div>
 
-                <!-- Trade Tape -->
-                <div class="panel trade-tape">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <span>⚡</span>
-                            <span>TRADE TAPE</span>
-                        </div>
-                    </div>
-                    <div class="panel-content" id="tradeTape">
-                        <!-- Trades will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Center Content -->
-            <div class="center-content">
-                <!-- Main Chart Area -->
-                <div class="panel chart-area">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <span>📈</span>
-                            <span>FOOTPRINT CHART</span>
-                        </div>
-                        <div class="chart-controls">
-                            <button class="timeframe-btn active">1m</button>
-                            <button class="timeframe-btn">5m</button>
-                            <button class="timeframe-btn">15m</button>
-                            <button class="timeframe-btn">1h</button>
-                            <button class="timeframe-btn">4h</button>
-                            <button class="timeframe-btn">1D</button>
-                        </div>
-                    </div>
-                    <div class="footprint-display" id="footprintChart">
-                        <!-- Footprint chart will be populated here -->
-                    </div>
-                </div>
-
-                <!-- AI Agent Interface -->
-                <div class="panel ai-panel hologram">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <span>🧠</span>
-                            <span>NEURAL AGENT</span>
-                        </div>
-                    </div>
-                    <div class="ai-interface">
-                        <div class="neural-visualization">
-                            <div class="neural-line" style="top: 20%; animation-delay: 0s;"></div>
-                            <div class="neural-line" style="top: 40%; animation-delay: 0.5s;"></div>
-                            <div class="neural-line" style="top: 60%; animation-delay: 1s;"></div>
-                            <div class="neural-line" style="top: 80%; animation-delay: 1.5s;"></div>
-                        </div>
-                        <div class="ai-response" id="aiResponse">
-                            <div id="aiContent">
-                                System initialized. Monitoring orderflow patterns...
-                                <span class="ai-thinking"></span>
-                                <span class="ai-thinking" style="animation-delay: 0.2s;"></span>
-                                <span class="ai-thinking" style="animation-delay: 0.4s;"></span>
-                            </div>
-                        </div>
-                        <div class="ai-input">
-                            <input type="text" placeholder="Ask about market conditions..." id="aiInput">
-                            <button class="ai-submit" onclick="sendAIQuery()">ANALYZE</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Sidebar -->
-            <div class="right-sidebar">
-                <!-- Market Bias -->
-                <div class="panel market-bias">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <span>🎯</span>
-                            <span>MARKET BIAS</span>
-                        </div>
-                    </div>
-                    <div class="panel-content">
-                        <div class="bias-indicator">
-                            <div class="bias-meter">
-                                <div class="bias-circle"></div>
-                                <div class="bias-inner">
-                                    <div class="bias-value bias-bullish" id="biasValue">BULL</div>
-                                    <div class="bias-label">CONVICTION: 72%</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Session Stats -->
-                <div class="panel session-stats">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <span>📊</span>
-                            <span>SESSION OVERVIEW</span>
-                        </div>
-                    </div>
-                    <div class="panel-content">
-                        <div class="stat-grid" id="sessionStats">
-                            <div class="stat-card">
-                                <div class="stat-label">Volume</div>
-                                <div class="stat-value">$2.4M</div>
-                                <div class="stat-change stat-up">↑ +12.5%</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-label">Delta</div>
-                                <div class="stat-value">+847</div>
-                                <div class="stat-change stat-up">BUYERS</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-label">CVD</div>
-                                <div class="stat-value">1,243</div>
-                                <div class="stat-change stat-up">↑ Rising</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-label">POC</div>
-                                <div class="stat-value">68,420</div>
-                                <div class="stat-change">STABLE</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Risk Metrics -->
-                <div class="panel risk-panel">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <span>⚠️</span>
-                            <span>RISK METRICS</span>
-                        </div>
-                    </div>
-                    <div class="panel-content" id="riskMetrics">
-                        <div class="risk-item">
-                            <div class="risk-label">Volatility Index</div>
-                            <div class="risk-value">24.8</div>
-                        </div>
-                        <div class="risk-bar">
-                            <div class="risk-fill" style="width: 45%"></div>
-                        </div>
-                        <div class="risk-item">
-                            <div class="risk-label">Liquidation Risk</div>
-                            <div class="risk-value">MODERATE</div>
-                        </div>
-                        <div class="risk-bar">
-                            <div class="risk-fill" style="width: 60%"></div>
-                        </div>
-                        <div class="risk-item">
-                            <div class="risk-label">Market Strength</div>
-                            <div class="risk-value">72%</div>
-                        </div>
-                        <div class="risk-bar">
-                            <div class="risk-fill" style="width: 72%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Footer -->
+        <div class="footer">
+            <div class="last-update">Last Updated: <span id="last-update">--</span></div>
+            <div class="footer-credit">TradeNet © 2024 | Powered by Claude Opus 4</div>
         </div>
     </div>
 
     <script>
-        // API Configuration
+        // IMPORTANT: Replace with your actual Render backend URL!
         const API_URL = 'https://tradenet-quantum-terminal.onrender.com/api/dashboard';
 
-        // Global data storage
-        let dashboardData = null;
-        let agentCount = 0;
-
-        // Initialize Terminal
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeTerminal();
-            updateClock();
-        });
-
-        function initializeTerminal() {
-            // Fetch initial data
-            fetchDashboardData().then(() => {
-                // Hide loading screen after data loads
-                setTimeout(() => {
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                }, 1500);
-            });
-
-            // Start data refresh
-            startDataFeeds();
-        }
-
-        // Fetch Dashboard Data
-        async function fetchDashboardData() {
+        async function fetchDashboard() {
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
@@ -1051,393 +860,219 @@
                 console.log('API Response:', data);
 
                 if (data.status === 'initializing') {
-                    document.getElementById('aiContent').innerHTML =
-                        '⏳ Quantum agents warming up... First analysis coming soon!';
+                    document.getElementById('dashboard').innerHTML =
+                        '<div class="loading">⏳ Agents warming up... First data coming soon!</div>';
                     return;
                 }
 
-                if (data.status === 'success' && data.overall_analysis) {
-                    dashboardData = data;
-                    updateDashboard(data);
+                if (data.status === 'success') {
+                    renderDashboard(data);
                 }
             } catch (error) {
-                console.error('Failed to fetch dashboard data:', error);
-                document.getElementById('aiContent').innerHTML =
-                    `<span style="color: var(--infrared-red)">❌ Connection error. Retrying...</span>`;
+                document.getElementById('dashboard').innerHTML =
+                    `<div class="error">❌ CONNECTION ERROR<br>${error.message}</div>`;
             }
         }
 
-        // Update Dashboard with API Data
-        function updateDashboard(data) {
+        function renderDashboard(data) {
+            // Check if data structure is valid
+            if (!data.overall_analysis || !data.overall_analysis.bias) {
+                document.getElementById('dashboard').innerHTML =
+                    '<div class="error">❌ DATA FORMAT ERROR<br>Backend returned incomplete data.</div>';
+                console.error('Invalid data structure:', data);
+                return;
+            }
+
             const overall = data.overall_analysis;
             const timeframes = data.timeframe_analysis;
-            const agents = data.agent_signals;
+            const agents = data.agent_signals || [];
             const regime = data.orderflow_regime;
             const trade = data.trade_recommendation;
             const risk = data.risk_assessment;
-            const factors = data.key_factors;
+            const factors = data.key_factors || [];
 
             // Update agent count in header
-            agentCount = agents ? agents.length : 0;
-            updateAgentCount(agentCount);
+            document.getElementById('agentCount').textContent = `AGENTS: ${agents.length}`;
 
-            // Update bias indicator
-            updateBiasIndicator(overall);
+            const biasClass = `bias-${overall.bias.toLowerCase()}`;
 
-            // Update session stats with real timeframe data
-            updateSessionStats(timeframes, overall);
+            const html = `
+                <!-- Main Bias Display -->
+                <div class="main-bias">
+                    <div class="main-bias-content">
+                        <div class="bias-label">QUANTUM MARKET ANALYSIS</div>
+                        <div class="bias-value ${biasClass}">${overall.bias}</div>
 
-            // Update risk metrics
-            updateRiskMetrics(risk, overall);
+                        <div class="conviction-bar">
+                            <div class="conviction-fill ${biasClass}" style="width: ${overall.confidence}%">
+                                CONFIDENCE: ${overall.confidence}%
+                            </div>
+                        </div>
 
-            // Update AI panel with executive summary and trade rec
-            updateAIPanel(overall, regime, trade);
+                        <div class="conviction-text">
+                            Conviction Level: <span style="text-transform: uppercase; color: var(--electric-blue);">
+                                ${overall.conviction}
+                            </span>
+                        </div>
 
-            // Generate order book based on bias
-            generateOrderBook(overall.bias, overall.confidence);
+                        <div class="executive-summary">
+                            <strong style="color: var(--electric-blue);">📊 EXECUTIVE SUMMARY:</strong><br>
+                            ${overall.executive_summary}
+                        </div>
+                    </div>
+                </div>
 
-            // Generate footprint chart with agent signals
-            generateFootprintChart(agents);
+                <!-- Orderflow Regime & Trade Recommendation -->
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">⚡ Orderflow Regime</div>
+                        <div class="regime-display">
+                            <div class="regime-type ${biasClass}">${regime.type.replace(/_/g, ' ')}</div>
+                            <div class="regime-strength">Strength: ${regime.strength}%</div>
+                            <div class="regime-description">${regime.description}</div>
+                        </div>
+                    </div>
 
-            // Update trade tape with factors
-            updateTradeTape(factors);
+                    <div class="card">
+                        <div class="card-header">🎯 Trade Recommendation</div>
+                        <div class="trade-display">
+                            <div class="trade-bias ${biasClass}">
+                                ${trade.primary_bias.toUpperCase()}
+                            </div>
+                            <div class="trade-details">
+                                <div class="trade-detail-row">
+                                    <strong>Timeframe:</strong>
+                                    <span style="color: var(--electric-blue)">${trade.suggested_timeframe}</span>
+                                </div>
+                                <div class="trade-detail-row">
+                                    <strong>Position Size:</strong>
+                                    <span style="color: var(--high-voltage)">${trade.position_sizing}</span>
+                                </div>
+                                <div class="trade-detail-row">
+                                    <strong>Confluence Score:</strong>
+                                    <span style="color: var(--neural-purple)">${trade.confluence_score}%</span>
+                                </div>
+                            </div>
+                            <div class="trade-notes">
+                                ${trade.notes}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeframe Analysis -->
+                <div class="card" style="margin-bottom: 30px;">
+                    <div class="card-header">⏱️ Multi-Timeframe Analysis</div>
+                    <div class="grid-3">
+                        ${renderTimeframe('SHORT TERM', timeframes.short_term)}
+                        ${renderTimeframe('MEDIUM TERM', timeframes.medium_term)}
+                        ${renderTimeframe('LONG TERM', timeframes.long_term)}
+                    </div>
+                </div>
+
+                <!-- Agent Signals -->
+                <div class="card" style="margin-bottom: 30px;">
+                    <div class="card-header">🤖 Agent Signals (${agents.length} Active)</div>
+                    <div class="agent-grid">
+                        ${agents.map(agent => renderAgent(agent)).join('')}
+                    </div>
+                </div>
+
+                <!-- Key Factors & Risk Assessment -->
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">🔑 Key Factors</div>
+                        <ul class="factor-list">
+                            ${factors.map(factor => `
+                                <li class="factor-item ${factor.impact}">
+                                    <div class="factor-text">${factor.factor}</div>
+                                    <div class="factor-meta">
+                                        <span>Impact: ${factor.impact.toUpperCase()}</span>
+                                        <span>Weight: ${factor.weight}</span>
+                                        <span>TF: ${factor.timeframe}</span>
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">⚠️ Risk Assessment</div>
+                        <div class="risk-section">
+                            <div class="risk-title">Bull Case Invalidation</div>
+                            <div class="risk-content">${risk.bull_case_invalidation}</div>
+                        </div>
+                        <div class="risk-section">
+                            <div class="risk-title">Bear Case Invalidation</div>
+                            <div class="risk-content">${risk.bear_case_invalidation}</div>
+                        </div>
+                        <div class="risk-section">
+                            <div class="risk-title">Main Risks</div>
+                            <ul class="risk-list">
+                                ${risk.main_risks.map(r => `<li>${r}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('dashboard').innerHTML = html;
 
             // Update last update time
             if (data.last_updated_formatted) {
-                document.getElementById('currentTime').textContent =
-                    `Last Update: ${data.last_updated_formatted}`;
+                document.getElementById('last-update').textContent = data.last_updated_formatted;
             }
 
-            // Create alert for high conviction signals
-            if (overall.confidence > 85 && overall.conviction !== 'low') {
-                showAlert(`⚡ HIGH CONVICTION ${overall.bias.toUpperCase()} SIGNAL - ${overall.confidence}% Confidence`);
-            }
-        }
-
-        function updateAgentCount(count) {
-            const agentIndicator = document.querySelector('.status-indicators');
-            const agentStatus = agentIndicator.querySelector('.status-item:nth-child(3) span:last-child');
-            if (agentStatus) {
-                agentStatus.textContent = `${count} AGENTS`;
+            // Show alert for high conviction
+            if (overall.confidence > 80 && overall.conviction !== 'low') {
+                showAlert(`HIGH CONVICTION ${overall.bias.toUpperCase()} SIGNAL - ${overall.confidence}% Confidence`);
             }
         }
 
-        function updateBiasIndicator(overall) {
-            const biasValue = document.getElementById('biasValue');
-            biasValue.textContent = overall.bias.toUpperCase();
-            biasValue.className = `bias-value bias-${overall.bias.toLowerCase()}`;
-
-            const biasLabel = document.querySelector('.bias-label');
-            biasLabel.innerHTML = `CONVICTION: ${overall.confidence}%<br><small>${overall.conviction.toUpperCase()}</small>`;
-        }
-
-        function updateSessionStats(timeframes, overall) {
-            const statsGrid = document.getElementById('sessionStats');
-
-            // Calculate aggregate metrics from timeframes
-            const shortConf = timeframes.short_term.confidence;
-            const medConf = timeframes.medium_term.confidence;
-            const longConf = timeframes.long_term.confidence;
-
-            const avgStrength = (
-                timeframes.short_term.strength +
-                timeframes.medium_term.strength +
-                timeframes.long_term.strength
-            ) / 3;
-
-            statsGrid.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-label">Short Term</div>
-                    <div class="stat-value ${timeframes.short_term.bias === 'bullish' ? 'bias-bullish' : timeframes.short_term.bias === 'bearish' ? 'bias-bearish' : 'bias-neutral'}">
-                        ${timeframes.short_term.bias.toUpperCase()}
-                    </div>
-                    <div class="stat-change">${shortConf.toFixed(1)}% conf</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Medium Term</div>
-                    <div class="stat-value ${timeframes.medium_term.bias === 'bullish' ? 'bias-bullish' : timeframes.medium_term.bias === 'bearish' ? 'bias-bearish' : 'bias-neutral'}">
-                        ${timeframes.medium_term.bias.toUpperCase()}
-                    </div>
-                    <div class="stat-change">${medConf.toFixed(1)}% conf</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Long Term</div>
-                    <div class="stat-value ${timeframes.long_term.bias === 'bullish' ? 'bias-bullish' : timeframes.long_term.bias === 'bearish' ? 'bias-bearish' : 'bias-neutral'}">
-                        ${timeframes.long_term.bias.toUpperCase()}
-                    </div>
-                    <div class="stat-change">${longConf.toFixed(1)}% conf</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Avg Strength</div>
-                    <div class="stat-value">${avgStrength.toFixed(1)}%</div>
-                    <div class="stat-change ${avgStrength > 50 ? 'stat-up' : 'stat-down'}">
-                        ${avgStrength > 50 ? '↑ Strong' : '↓ Weak'}
-                    </div>
-                </div>
-            `;
-        }
-
-        function updateRiskMetrics(risk, overall) {
-            const riskPanel = document.getElementById('riskMetrics');
-
-            const mainRisk = risk.main_risks && risk.main_risks.length > 0
-                ? risk.main_risks[0]
-                : 'Market conditions normal';
-
-            riskPanel.innerHTML = `
-                <div class="risk-item">
-                    <div class="risk-label">Market Confidence</div>
-                    <div class="risk-value">${overall.confidence}%</div>
-                </div>
-                <div class="risk-bar">
-                    <div class="risk-fill" style="width: ${overall.confidence}%"></div>
-                </div>
-
-                <div class="risk-item">
-                    <div class="risk-label">Conviction Level</div>
-                    <div class="risk-value">${overall.conviction.toUpperCase()}</div>
-                </div>
-                <div class="risk-bar">
-                    <div class="risk-fill" style="width: ${
-                        overall.conviction === 'high' ? 90 :
-                        overall.conviction === 'medium' ? 60 : 30
-                    }%"></div>
-                </div>
-
-                <div class="risk-item">
-                    <div class="risk-label">Primary Risk</div>
-                    <div class="risk-value" style="font-size: 10px; color: var(--high-voltage)">
-                        ${mainRisk.substring(0, 50)}...
-                    </div>
-                </div>
-
-                <div style="margin-top: 10px; padding: 8px; background: rgba(255, 204, 0, 0.1); border-radius: 4px; border: 1px solid rgba(255, 204, 0, 0.3);">
-                    <div style="font-size: 10px; color: var(--high-voltage); margin-bottom: 4px;">
-                        ⚠️ Bull Invalidation:
-                    </div>
-                    <div style="font-size: 9px; opacity: 0.8;">
-                        ${risk.bull_case_invalidation}
-                    </div>
-                </div>
-            `;
-        }
-
-        function updateAIPanel(overall, regime, trade) {
-            const aiContent = document.getElementById('aiContent');
-
-            aiContent.innerHTML = `
-                <div style="margin-bottom: 12px;">
-                    <strong style="color: var(--electric-blue)">📊 Executive Analysis:</strong><br>
-                    <span style="font-size: 12px; line-height: 1.5;">${overall.executive_summary}</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0;">
-                    <div style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 4px;">
-                        <div style="font-size: 10px; color: var(--text-dim); margin-bottom: 4px;">ORDERFLOW REGIME</div>
-                        <div style="font-size: 14px; font-weight: 600; color: var(--electric-blue)">
-                            ${regime.type.replace(/_/g, ' ').toUpperCase()}
+        function renderTimeframe(label, tf) {
+            const biasClass = `bias-${tf.bias.toLowerCase()}`;
+            return `
+                <div class="timeframe-card">
+                    <div class="timeframe-label">${label}</div>
+                    <div class="timeframe-bias ${biasClass}">${tf.bias.toUpperCase()}</div>
+                    <div class="timeframe-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">CONFIDENCE</div>
+                            <div class="stat-value">${tf.confidence.toFixed(1)}%</div>
                         </div>
-                        <div style="font-size: 11px; opacity: 0.8;">Strength: ${regime.strength}%</div>
-                    </div>
-
-                    <div style="background: rgba(139, 92, 246, 0.1); padding: 8px; border-radius: 4px;">
-                        <div style="font-size: 10px; color: var(--text-dim); margin-bottom: 4px;">TRADE REC</div>
-                        <div style="font-size: 14px; font-weight: 600; color: var(--neural-purple)">
-                            ${trade.primary_bias.toUpperCase()}
-                        </div>
-                        <div style="font-size: 11px; opacity: 0.8;">TF: ${trade.suggested_timeframe}</div>
-                    </div>
-                </div>
-
-                <div style="background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 4px; margin-top: 8px;">
-                    <div style="font-size: 11px; color: var(--muted-teal); margin-bottom: 4px;">
-                        💡 Position Sizing: ${trade.position_sizing} | Confluence: ${trade.confluence_score}%
-                    </div>
-                    <div style="font-size: 11px; opacity: 0.7;">
-                        ${trade.notes}
-                    </div>
-                </div>
-            `;
-        }
-
-        function generateOrderBook(bias, confidence) {
-            const orderBook = document.getElementById('orderBook');
-            let html = '';
-
-            // Adjust order book based on bias
-            const biasFactor = bias === 'bullish' ? 1.3 : bias === 'bearish' ? 0.7 : 1.0;
-
-            // Generate asks (sell orders)
-            for (let i = 10; i > 0; i--) {
-                const size = Math.floor((Math.random() * 100 + 10) / biasFactor);
-                const barWidth = Math.min(size / 2, 100);
-                const price = 68420 + (i * 10);
-
-                html += `
-                    <div class="order-level ask">
-                        <div class="order-price" style="color: var(--sell-color)">${price.toFixed(1)}</div>
-                        <div class="order-size">${size}</div>
-                        <div class="order-bar ask" style="width: ${barWidth}%"></div>
-                    </div>
-                `;
-            }
-
-            // Current price with bias indicator
-            html += `
-                <div style="text-align: center; padding: 8px; background: linear-gradient(90deg,
-                    ${bias === 'bullish' ? 'rgba(0, 255, 136, 0.2)' :
-                      bias === 'bearish' ? 'rgba(255, 51, 102, 0.2)' :
-                      'rgba(0, 212, 255, 0.1)'});
-                    font-weight: 700; color: var(--electric-blue);">
-                    68,420.0 <span style="font-size: 10px;">${bias.toUpperCase()}</span>
-                </div>
-            `;
-
-            // Generate bids (buy orders)
-            for (let i = 1; i <= 10; i--) {
-                const size = Math.floor((Math.random() * 100 + 10) * biasFactor);
-                const barWidth = Math.min(size / 2, 100);
-                const price = 68420 - (i * 10);
-
-                html += `
-                    <div class="order-level bid">
-                        <div class="order-price" style="color: var(--buy-color)">${price.toFixed(1)}</div>
-                        <div class="order-size">${size}</div>
-                        <div class="order-bar bid" style="width: ${barWidth}%"></div>
-                    </div>
-                `;
-            }
-
-            orderBook.innerHTML = html;
-        }
-
-        function generateFootprintChart(agents) {
-            const footprintChart = document.getElementById('footprintChart');
-
-            if (!agents || agents.length === 0) {
-                footprintChart.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.5;">Waiting for agent signals...</div>';
-                return;
-            }
-
-            let html = '<div class="footprint-grid">';
-
-            // Create footprint cells based on agent signals
-            agents.forEach(agent => {
-                const bid = Math.floor(agent.strength * 5 + Math.random() * 100);
-                const ask = Math.floor((100 - agent.strength) * 5 + Math.random() * 100);
-                const delta = agent.bias === 'bullish' ? bid - ask : ask - bid;
-                const bgOpacity = agent.confidence / 100;
-                const bgColor = agent.bias === 'bullish' ? 'rgba(0, 255, 136, ' :
-                               agent.bias === 'bearish' ? 'rgba(255, 51, 102, ' :
-                               'rgba(99, 110, 136, ';
-
-                const agentName = agent.agent_id.replace(/_/g, ' ').substring(0, 10);
-
-                html += `
-                    <div class="footprint-cell" style="background: ${bgColor}${bgOpacity * 0.3})"
-                         title="${agent.agent_id}: ${agent.bias} (${agent.confidence}% confidence)">
-                        <div style="font-size: 8px; opacity: 0.6; margin-bottom: 4px;">${agentName}</div>
-                        <div class="footprint-bid">${bid}</div>
-                        <div class="footprint-ask">${ask}</div>
-                        <div class="footprint-delta ${agent.bias === 'bullish' ? 'bias-bullish' : agent.bias === 'bearish' ? 'bias-bearish' : 'bias-neutral'}">
-                            ${delta > 0 ? '+' : ''}${delta}
+                        <div class="stat-item">
+                            <div class="stat-label">STRENGTH</div>
+                            <div class="stat-value">${tf.strength.toFixed(1)}%</div>
                         </div>
                     </div>
-                `;
-            });
-
-            // Fill remaining cells if fewer agents
-            const remainingCells = Math.max(0, 20 - agents.length);
-            for (let i = 0; i < remainingCells; i++) {
-                html += `
-                    <div class="footprint-cell" style="opacity: 0.3;">
-                        <div class="footprint-bid">--</div>
-                        <div class="footprint-ask">--</div>
-                        <div class="footprint-delta">0</div>
+                    <div class="timeframe-reasoning">
+                        ${tf.ai_recommendation.reasoning}
                     </div>
-                `;
-            }
-
-            html += '</div>';
-            footprintChart.innerHTML = html;
-        }
-
-        function updateTradeTape(factors) {
-            const tape = document.getElementById('tradeTape');
-
-            if (!factors || factors.length === 0) {
-                return;
-            }
-
-            // Clear existing and add factor-based trades
-            tape.innerHTML = '';
-
-            factors.slice(0, 10).forEach((factor, index) => {
-                const isBullish = factor.impact === 'bullish';
-                const time = new Date();
-                time.setSeconds(time.getSeconds() - index * 5);
-                const timeStr = time.toLocaleTimeString('en-US', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-
-                const trade = document.createElement('div');
-                trade.className = `trade-item ${isBullish ? 'buy' : 'sell'}`;
-                trade.innerHTML = `
-                    <div class="trade-time">${timeStr}</div>
-                    <div class="trade-price" style="color: var(--${isBullish ? 'buy' : 'sell'}-color)">
-                        ${factor.weight}
-                    </div>
-                    <div class="trade-size" style="font-size: 9px; opacity: 0.7;" title="${factor.factor}">
-                        ${factor.timeframe}
-                    </div>
-                `;
-
-                tape.appendChild(trade);
-            });
-        }
-
-        // AI Query Handler - now with real data context
-        function sendAIQuery() {
-            const input = document.getElementById('aiInput');
-            const query = input.value.trim();
-
-            if (!query) return;
-
-            const aiContent = document.getElementById('aiContent');
-            aiContent.innerHTML = `
-                Processing query: "${query}"<br>
-                <span class="ai-thinking"></span>
-                <span class="ai-thinking" style="animation-delay: 0.2s;"></span>
-                <span class="ai-thinking" style="animation-delay: 0.4s;"></span>
+                </div>
             `;
-
-            // Simulate AI response with actual data context
-            setTimeout(() => {
-                if (dashboardData) {
-                    const overall = dashboardData.overall_analysis;
-                    const trade = dashboardData.trade_recommendation;
-
-                    aiContent.innerHTML = `
-                        <strong>Query Analysis:</strong> "${query}"<br><br>
-                        Based on current data:<br>
-                        • Market Bias: ${overall.bias.toUpperCase()} (${overall.confidence}% confidence)<br>
-                        • Recommended Action: ${trade.primary_bias}<br>
-                        • Timeframe: ${trade.suggested_timeframe}<br>
-                        • Risk Level: ${overall.conviction}<br><br>
-                        ${overall.executive_summary}
-                    `;
-                } else {
-                    aiContent.innerHTML = `Analyzing... Please wait for initial data load.`;
-                }
-            }, 2000);
-
-            input.value = '';
         }
 
-        // Show Alert Notification
+        function renderAgent(agent) {
+            const biasClass = `bias-${agent.bias.toLowerCase()}`;
+            const agentName = agent.agent_id.replace(/_/g, ' ').toUpperCase();
+            return `
+                <div class="agent-card">
+                    <div class="agent-name">${agentName}</div>
+                    <div class="agent-bias-large ${biasClass}">${agent.bias.toUpperCase()}</div>
+                    <div class="agent-stats">
+                        <div class="agent-stat">
+                            <div class="agent-stat-label">CONFIDENCE</div>
+                            <div class="agent-stat-value">${agent.confidence}%</div>
+                        </div>
+                        <div class="agent-stat">
+                            <div class="agent-stat-label">STRENGTH</div>
+                            <div class="agent-stat-value">${agent.strength.toFixed(1)}%</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         function showAlert(message) {
             const existingAlert = document.querySelector('.alert-notification');
             if (existingAlert) {
@@ -1447,7 +1082,7 @@
             const alert = document.createElement('div');
             alert.className = 'alert-notification';
             alert.innerHTML = `
-                <div class="alert-icon">⚡</div>
+                <div style="font-weight: 700;">⚡</div>
                 <div>${message}</div>
             `;
 
@@ -1458,56 +1093,11 @@
             }, 5000);
         }
 
-        // Update Clock
-        function updateClock() {
-            const timeElement = document.getElementById('currentTime');
+        // Initial fetch
+        fetchDashboard();
 
-            setInterval(() => {
-                const now = new Date();
-                timeElement.textContent = now.toLocaleTimeString('en-US', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            }, 1000);
-        }
-
-        // Start Data Feeds
-        function startDataFeeds() {
-            // Refresh dashboard data every 30 seconds
-            setInterval(fetchDashboardData, 30000);
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Press 'A' to focus AI input
-            if (e.key === 'a' && !e.ctrlKey && !e.metaKey) {
-                const aiInput = document.getElementById('aiInput');
-                if (document.activeElement !== aiInput) {
-                    aiInput.focus();
-                    e.preventDefault();
-                }
-            }
-
-            // Press 'R' to refresh data
-            if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
-                fetchDashboardData();
-                showAlert('📊 Refreshing dashboard data...');
-            }
-
-            // Press Escape to clear focus
-            if (e.key === 'Escape') {
-                document.activeElement.blur();
-            }
-        });
-
-        // Handle AI input enter key
-        document.getElementById('aiInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendAIQuery();
-            }
-        });
+        // Refresh every 30 seconds
+        setInterval(fetchDashboard, 30000);
     </script>
 </body>
 </html>
