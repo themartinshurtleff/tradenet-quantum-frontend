@@ -494,128 +494,139 @@
         }
 
         function renderDashboard(data) {
-            const overall = data.overall_analysis;
-            const timeframes = data.timeframe_analysis;
-            const agents = data.agent_signals;
-            const regime = data.orderflow_regime;
-            const trade = data.trade_recommendation;
-            const risk = data.risk_assessment;
-            const factors = data.key_factors;
+    // Add debugging
+    console.log('Received data:', data);
 
-            const biasClass = `bias-${overall.bias.toLowerCase()}`;
+    // Check if data structure is valid
+    if (!data.overall_analysis || !data.overall_analysis.bias) {
+        document.getElementById('dashboard').innerHTML =
+            '<div class="error">❌ DATA FORMAT ERROR<br>Backend returned incomplete data. Check console for details.</div>';
+        console.error('Invalid data structure:', data);
+        return;
+    }
 
-            const html = `
-                <!-- Main Bias Display -->
-                <div class="main-bias">
-                    <div class="main-bias-content">
-                        <div class="bias-label">MARKET BIAS</div>
-                        <div class="bias-value ${biasClass}">${overall.bias}</div>
+    const overall = data.overall_analysis;
+    const timeframes = data.timeframe_analysis;
+    const agents = data.agent_signals;
+    const regime = data.orderflow_regime;
+    const trade = data.trade_recommendation;
+    const risk = data.risk_assessment;
+    const factors = data.key_factors;
 
-                        <div class="conviction-bar">
-                            <div class="conviction-fill ${biasClass}" style="width: ${overall.confidence}%">
-                                CONFIDENCE: ${overall.confidence}%
+    const biasClass = `bias-${overall.bias.toLowerCase()}`;
+
+    const html = `
+        <!-- Main Bias Display -->
+        <div class="main-bias">
+            <div class="main-bias-content">
+                <div class="bias-label">MARKET BIAS</div>
+                <div class="bias-value ${biasClass}">${overall.bias}</div>
+
+                <div class="conviction-bar">
+                    <div class="conviction-fill ${biasClass}" style="width: ${overall.confidence}%">
+                        CONFIDENCE: ${overall.confidence}%
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; font-size: 1.5em;">
+                    Conviction: <span style="text-transform: uppercase;">${overall.conviction}</span>
+                </div>
+
+                <div class="executive-summary">
+                    <strong>📊 EXECUTIVE SUMMARY:</strong><br>
+                    ${overall.executive_summary}
+                </div>
+            </div>
+        </div>
+
+        <!-- Orderflow Regime & Trade Rec -->
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header">⚡ Orderflow Regime</div>
+                <div class="regime-display">
+                    <div class="regime-type ${biasClass}">${regime.type.replace(/_/g, ' ')}</div>
+                    <div class="regime-strength">Strength: ${regime.strength}%</div>
+                    <div class="regime-description">${regime.description}</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">🎯 Trade Recommendation</div>
+                <div class="card-content">
+                    <div style="font-size: 2em; text-align: center; margin: 20px 0;" class="${biasClass}">
+                        ${trade.primary_bias.toUpperCase()}
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <strong>Timeframe:</strong> ${trade.suggested_timeframe}<br>
+                        <strong>Position Size:</strong> ${trade.position_sizing}<br>
+                        <strong>Confluence:</strong> ${trade.confluence_score}%
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px; margin-top: 15px;">
+                        ${trade.notes}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeframe Analysis -->
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header">⏱️ Multi-Timeframe Analysis</div>
+            <div class="grid-3">
+                ${renderTimeframe('SHORT TERM', timeframes.short_term)}
+                ${renderTimeframe('MEDIUM TERM', timeframes.medium_term)}
+                ${renderTimeframe('LONG TERM', timeframes.long_term)}
+            </div>
+        </div>
+
+        <!-- Agent Signals -->
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="card-header">🤖 Agent Signals (${agents.length})</div>
+            <div class="agent-grid">
+                ${agents.map(agent => renderAgent(agent)).join('')}
+            </div>
+        </div>
+
+        <!-- Key Factors & Risk -->
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header">🔑 Key Factors</div>
+                <ul class="factor-list">
+                    ${factors.map(factor => `
+                        <li class="factor-item ${factor.impact}">
+                            <div class="factor-text">${factor.factor}</div>
+                            <div class="factor-meta">
+                                <span>Impact: ${factor.impact}</span>
+                                <span>Weight: ${factor.weight}</span>
+                                <span>TF: ${factor.timeframe}</span>
                             </div>
-                        </div>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
 
-                        <div style="margin-top: 20px; font-size: 1.5em;">
-                            Conviction: <span style="text-transform: uppercase;">${overall.conviction}</span>
-                        </div>
-
-                        <div class="executive-summary">
-                            <strong>📊 EXECUTIVE SUMMARY:</strong><br>
-                            ${overall.executive_summary}
-                        </div>
-                    </div>
+            <div class="card">
+                <div class="card-header">⚠️ Risk Assessment</div>
+                <div class="risk-section">
+                    <div class="risk-title">Bull Case Invalidation</div>
+                    <div class="risk-content">${risk.bull_case_invalidation}</div>
                 </div>
-
-                <!-- Orderflow Regime & Trade Rec -->
-                <div class="grid-2">
-                    <div class="card">
-                        <div class="card-header">⚡ Orderflow Regime</div>
-                        <div class="regime-display">
-                            <div class="regime-type ${biasClass}">${regime.type.replace(/_/g, ' ')}</div>
-                            <div class="regime-strength">Strength: ${regime.strength}%</div>
-                            <div class="regime-description">${regime.description}</div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">🎯 Trade Recommendation</div>
-                        <div class="card-content">
-                            <div style="font-size: 2em; text-align: center; margin: 20px 0;" class="${biasClass}">
-                                ${trade.primary_bias.toUpperCase()}
-                            </div>
-                            <div style="margin: 15px 0;">
-                                <strong>Timeframe:</strong> ${trade.suggested_timeframe}<br>
-                                <strong>Position Size:</strong> ${trade.position_sizing}<br>
-                                <strong>Confluence:</strong> ${trade.confluence_score}%
-                            </div>
-                            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px; margin-top: 15px;">
-                                ${trade.notes}
-                            </div>
-                        </div>
-                    </div>
+                <div class="risk-section">
+                    <div class="risk-title">Bear Case Invalidation</div>
+                    <div class="risk-content">${risk.bear_case_invalidation}</div>
                 </div>
-
-                <!-- Timeframe Analysis -->
-                <div class="card" style="margin-bottom: 30px;">
-                    <div class="card-header">⏱️ Multi-Timeframe Analysis</div>
-                    <div class="grid-3">
-                        ${renderTimeframe('SHORT TERM', timeframes.short_term)}
-                        ${renderTimeframe('MEDIUM TERM', timeframes.medium_term)}
-                        ${renderTimeframe('LONG TERM', timeframes.long_term)}
-                    </div>
+                <div class="risk-section">
+                    <div class="risk-title">Main Risks</div>
+                    <ul class="risk-list">
+                        ${risk.main_risks.map(r => `<li>${r}</li>`).join('')}
+                    </ul>
                 </div>
+            </div>
+        </div>
+    `;
 
-                <!-- Agent Signals -->
-                <div class="card" style="margin-bottom: 30px;">
-                    <div class="card-header">🤖 Agent Signals (${agents.length})</div>
-                    <div class="agent-grid">
-                        ${agents.map(agent => renderAgent(agent)).join('')}
-                    </div>
-                </div>
-
-                <!-- Key Factors & Risk -->
-                <div class="grid-2">
-                    <div class="card">
-                        <div class="card-header">🔑 Key Factors</div>
-                        <ul class="factor-list">
-                            ${factors.map(factor => `
-                                <li class="factor-item ${factor.impact}">
-                                    <div class="factor-text">${factor.factor}</div>
-                                    <div class="factor-meta">
-                                        <span>Impact: ${factor.impact}</span>
-                                        <span>Weight: ${factor.weight}</span>
-                                        <span>TF: ${factor.timeframe}</span>
-                                    </div>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">⚠️ Risk Assessment</div>
-                        <div class="risk-section">
-                            <div class="risk-title">Bull Case Invalidation</div>
-                            <div class="risk-content">${risk.bull_case_invalidation}</div>
-                        </div>
-                        <div class="risk-section">
-                            <div class="risk-title">Bear Case Invalidation</div>
-                            <div class="risk-content">${risk.bear_case_invalidation}</div>
-                        </div>
-                        <div class="risk-section">
-                            <div class="risk-title">Main Risks</div>
-                            <ul class="risk-list">
-                                ${risk.main_risks.map(r => `<li>${r}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('dashboard').innerHTML = html;
-            document.getElementById('last-update').textContent = data.last_updated_formatted;
-        }
+    document.getElementById('dashboard').innerHTML = html;
+    document.getElementById('last-update').textContent = data.last_updated_formatted;
+}
 
         function renderTimeframe(label, tf) {
             const biasClass = `bias-${tf.bias.toLowerCase()}`;
