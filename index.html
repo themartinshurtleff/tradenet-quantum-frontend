@@ -249,17 +249,19 @@
             margin: 25px auto;
         }
 
-        .conviction-fill {
-            height: 100%;
-            transition: width 1s ease-out;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-family: 'Figtree', sans-serif;
-            font-size: 14px;
-            letter-spacing: 1px;
-        }
+            .conviction-fill {
+        height: 100%;
+        transition: width 1s ease-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-family: 'Figtree', sans-serif;
+        font-size: 14px;
+        letter-spacing: 1px;
+        color: #ffffff;  /* ✅ ADD THIS - White text */
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);  /* ✅ ADD THIS - Shadow for readability */
+    }
 
         .conviction-fill.bias-bullish {
             background: var(--gradient-buy);
@@ -862,7 +864,7 @@
         <!-- Footer -->
         <div class="footer">
             <div class="last-update">Last Updated: <span id="last-update">--</span></div>
-            <div class="footer-credit">TradeNet © 2024 | Powered by Claude Opus 4</div>
+            <div class="footer-credit">TradeNet © 2024 | Powered by TradeNet QUANTUM v1</div>
         </div>
     </div>
 
