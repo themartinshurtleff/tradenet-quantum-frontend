@@ -725,6 +725,23 @@
             letter-spacing: 1px;
         }
 
+        .error button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: var(--electric-blue);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .error button:hover {
+            background: var(--muted-teal);
+        }
+
         /* Alert Notification */
         .alert-notification {
             position: fixed;
@@ -849,29 +866,96 @@
     </div>
 
     <script>
-        // IMPORTANT: Replace with your actual Render backend URL!
+        // IMPORTANT: Your Render backend URL
         const API_URL = 'https://tradenet-quantum-terminal.onrender.com/api/dashboard';
 
-        async function fetchDashboard() {
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
+        // Track initialization attempts
+        let initAttempts = 0;
+        const maxAttempts = 5;
 
+        async function fetchDashboard() {
+            console.log(`Fetching dashboard (attempt ${initAttempts + 1})...`);
+
+            try {
+                // Note: This will only work if your backend has proper CORS headers
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
                 console.log('API Response:', data);
 
+                // Handle different response states
                 if (data.status === 'initializing') {
-                    document.getElementById('dashboard').innerHTML =
-                        '<div class="loading">⏳ Agents warming up... First data coming soon!</div>';
+                    initAttempts++;
+                    if (initAttempts < maxAttempts) {
+                        document.getElementById('dashboard').innerHTML =
+                            `<div class="loading">⏳ Agents warming up... (Attempt ${initAttempts}/${maxAttempts})</div>`;
+                        // Try again in 5 seconds
+                        setTimeout(fetchDashboard, 5000);
+                    } else {
+                        document.getElementById('dashboard').innerHTML =
+                            `<div class="error">
+                                ⏳ Agents are still initializing after ${maxAttempts} attempts.<br>
+                                This might indicate the backend is starting up.<br><br>
+                                <button onclick="resetAndRetry()">RETRY</button>
+                            </div>`;
+                    }
                     return;
                 }
 
-                if (data.status === 'success') {
+                // Reset attempts on successful data
+                initAttempts = 0;
+
+                // Check for valid data structure
+                if (data.overall_analysis || data.status === 'success') {
                     renderDashboard(data);
+                } else {
+                    throw new Error('Invalid data structure received');
                 }
+
             } catch (error) {
+                console.error('Dashboard error:', error);
+
+                let errorMessage = error.message;
+                let troubleshooting = '';
+
+                // Provide helpful troubleshooting based on error type
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Cannot connect to API';
+                    troubleshooting = `
+                        <br><br>
+                        <strong>Possible issues:</strong><br>
+                        • Backend server may be down<br>
+                        • CORS not configured on backend<br>
+                        • Network connectivity issues<br><br>
+                        <strong>Try:</strong><br>
+                        • Check if API is accessible: <a href="${API_URL}" target="_blank" style="color: var(--electric-blue)">Open API</a><br>
+                        • Check browser console for details (F12)
+                    `;
+                } else if (error.message.includes('HTTP 5')) {
+                    errorMessage = 'Server Error';
+                    troubleshooting = '<br><br>The backend server encountered an error. Please check server logs.';
+                } else if (error.message.includes('HTTP 4')) {
+                    errorMessage = 'Request Error';
+                    troubleshooting = '<br><br>The API endpoint might have changed or requires authentication.';
+                }
+
                 document.getElementById('dashboard').innerHTML =
-                    `<div class="error">❌ CONNECTION ERROR<br>${error.message}</div>`;
+                    `<div class="error">
+                        ❌ ${errorMessage}
+                        ${troubleshooting}
+                        <br><br>
+                        <button onclick="fetchDashboard()">RETRY</button>
+                    </div>`;
             }
+        }
+
+        function resetAndRetry() {
+            initAttempts = 0;
+            fetchDashboard();
         }
 
         function renderDashboard(data) {
@@ -1093,11 +1177,17 @@
             }, 5000);
         }
 
-        // Initial fetch
-        fetchDashboard();
+        // Initial fetch with delay
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('TradeNet Quantum Terminal initializing...');
+            console.log('API Endpoint:', API_URL);
 
-        // Refresh every 30 seconds
-        setInterval(fetchDashboard, 30000);
+            // Start fetching after a brief delay
+            setTimeout(fetchDashboard, 1000);
+
+            // Refresh every 30 seconds
+            setInterval(fetchDashboard, 30000);
+        });
     </script>
 </body>
 </html>
