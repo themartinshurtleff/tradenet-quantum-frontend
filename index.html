@@ -112,7 +112,7 @@
             justify-content: space-between;
             align-items: center;
             backdrop-filter: blur(10px);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .logo {
@@ -172,6 +172,119 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            background: linear-gradient(90deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 30px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'Figtree', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .tab-button:hover::before {
+            left: 100%;
+        }
+
+        .tab-button:hover {
+            color: var(--electric-blue);
+            border-color: rgba(0, 212, 255, 0.3);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .tab-button.active {
+            background: var(--gradient-neural);
+            border-color: var(--electric-blue);
+            color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .tab-button.active::before {
+            display: none;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Chart Container Placeholder */
+        .chart-container {
+            background: var(--bg-panel);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+            padding: 40px;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chart-placeholder {
+            font-family: 'Figtree', sans-serif;
+            font-size: 2em;
+            color: var(--electric-blue);
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .chart-subtext {
+            font-size: 1.1em;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
         }
 
         /* Main Bias Display */
@@ -249,19 +362,19 @@
             margin: 25px auto;
         }
 
-            .conviction-fill {
-        height: 100%;
-        transition: width 1s ease-out;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-family: 'Figtree', sans-serif;
-        font-size: 14px;
-        letter-spacing: 1px;
-        color: #ffffff;  /* ✅ ADD THIS - White text */
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);  /* ✅ ADD THIS - Shadow for readability */
-    }
+        .conviction-fill {
+            height: 100%;
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-family: 'Figtree', sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
 
         .conviction-fill.bias-bullish {
             background: var(--gradient-buy);
@@ -819,6 +932,14 @@
                 justify-content: center;
             }
 
+            .tab-navigation {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                padding: 12px 20px;
+            }
+
             .bias-value {
                 font-size: 3em;
             }
@@ -856,9 +977,34 @@
             </div>
         </div>
 
-        <!-- Dashboard Content -->
-        <div id="dashboard">
-            <div class="loading">⚡ INITIALIZING QUANTUM SYSTEMS...</div>
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="switchTab('sentiment')">
+                📊 Sentiment Analysis
+            </button>
+            <button class="tab-button" onclick="switchTab('chart')">
+                📈 Orderflow Chart
+            </button>
+        </div>
+
+        <!-- Tab: Sentiment Analysis -->
+        <div id="sentiment-tab" class="tab-content active">
+            <div id="dashboard">
+                <div class="loading">⚡ INITIALIZING QUANTUM SYSTEMS...</div>
+            </div>
+        </div>
+
+        <!-- Tab: Chart (Empty Placeholder) -->
+        <div id="chart-tab" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-placeholder">
+                    📈 ORDERFLOW CHART MODULE
+                </div>
+                <div class="chart-subtext">
+                    Advanced orderflow visualization will be integrated here.<br>
+                    Real-time footprint charts, CVD analysis, and order book heatmaps.
+                </div>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -869,6 +1015,27 @@
     </div>
 
     <script>
+        // Tab switching function
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            // Activate clicked button
+            event.target.classList.add('active');
+
+            console.log('Switched to tab:', tabName);
+        }
+
         // IMPORTANT: Your Render backend URL
         const API_URL = 'https://tradenet-quantum-terminal.onrender.com/api/dashboard';
 
@@ -1188,8 +1355,13 @@
             // Start fetching after a brief delay
             setTimeout(fetchDashboard, 1000);
 
-            // Refresh every 30 seconds
-            setInterval(fetchDashboard, 30000);
+            // Refresh every 30 seconds (only for sentiment tab)
+            setInterval(() => {
+                // Only auto-refresh if on sentiment tab
+                if (document.getElementById('sentiment-tab').classList.contains('active')) {
+                    fetchDashboard();
+                }
+            }, 30000);
         });
     </script>
 </body>
